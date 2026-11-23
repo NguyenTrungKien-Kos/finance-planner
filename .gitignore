@@ -39,3 +39,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Bien moi truong
+.env
+.env.*
+!.env.example
+
+# Tai lieu noi bo & de bai (khong nop)
+PLAN.md
+*.pdf
