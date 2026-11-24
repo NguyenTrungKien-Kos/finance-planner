@@ -29,3 +29,11 @@ export const CATEGORY_LABELS: Record<(typeof CATEGORIES)[number], string> = {
   INVESTMENT: "Đầu tư",
   OTHER: "Khác",
 };
+
+export const PRIORITIES = ["LOW", "MEDIUM", "HIGH"] as const;
+
+export const PRIORITY_LABELS: Record<(typeof PRIORITIES)[number], string> = {
+  LOW: "Thấp",
+  MEDIUM: "Trung bình",
+  HIGH: "Cao",
+};

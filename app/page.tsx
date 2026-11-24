@@ -8,12 +8,18 @@ import {
   CATEGORY_LABELS,
   TRANSACTION_TYPES,
 } from "@/lib/constants";
-import { calculateSummary, getDateRange } from "@/lib/finance";
+import {
+  calculateSummary,
+  getCategoryExpenseBreakdown,
+  getDateRange,
+} from "@/lib/finance";
 import { DeleteTransactionButton } from "@/components/delete-transaction-button";
+import { ExpensePieChart } from "@/components/expense-pie-chart";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { TransactionDialog } from "@/components/transaction-dialog";
 import { TransactionFilters } from "@/components/transaction-filters";
 import { UserNav } from "@/components/user-nav";
+import { WishlistSection } from "@/components/wishlist-section";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -103,17 +109,37 @@ async function DashboardContent({
 
   const dateRange = getDateRange(period);
 
-  const transactions = await prisma.transaction.findMany({
-    where: {
-      userId: user.id,
-      ...(validType ? { type: validType } : {}),
-      ...(validCategory ? { category: validCategory } : {}),
-      ...(dateRange ? { date: dateRange } : {}),
-    },
-    orderBy: [{ date: "desc" }, { createdAt: "desc" }],
-  });
+  const [transactions, allTransactions, wishlistItems] = await Promise.all([
+    prisma.transaction.findMany({
+      where: {
+        userId: user.id,
+        ...(validType ? { type: validType } : {}),
+        ...(validCategory ? { category: validCategory } : {}),
+        ...(dateRange ? { date: dateRange } : {}),
+      },
+      orderBy: [{ date: "desc" }, { createdAt: "desc" }],
+    }),
+    prisma.transaction.findMany({
+      where: { userId: user.id },
+      select: { type: true, amount: true, category: true, date: true },
+    }),
+    prisma.wishlistItem.findMany({
+      where: { userId: user.id },
+      orderBy: [{ priority: "desc" }, { createdAt: "desc" }],
+    }),
+  ]);
 
   const { totalIncome, totalExpense, balance } = calculateSummary(transactions);
+  const { balance: overallBalance } = calculateSummary(allTransactions);
+
+  const thisMonthRange = getDateRange("this_month")!;
+  const thisMonthExpenses = allTransactions.filter(
+    (tx) =>
+      tx.type === "EXPENSE" &&
+      tx.date >= thisMonthRange.gte &&
+      tx.date < thisMonthRange.lt
+  );
+  const expenseBreakdown = getCategoryExpenseBreakdown(thisMonthExpenses);
 
   return (
     <>
@@ -158,6 +184,15 @@ async function DashboardContent({
           </CardContent>
         </Card>
       </section>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <ExpensePieChart data={expenseBreakdown} />
+        <WishlistSection
+          userId={user.id}
+          items={wishlistItems}
+          balance={overallBalance}
+        />
+      </div>
 
       <Card>
         <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
