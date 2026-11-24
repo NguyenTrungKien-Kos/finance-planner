@@ -2,6 +2,8 @@ import { Suspense } from "react";
 import { connection } from "next/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { fetchExchangeRates } from "@/lib/exchange-rates";
+import { CurrencyConverterCard } from "@/components/currency-converter-card";
 import { MonthlyComparisonChart } from "@/components/monthly-comparison-chart";
 import { requireUser, UnauthorizedError } from "@/lib/dal";
 import {
@@ -112,25 +114,27 @@ async function DashboardContent({
 
   const dateRange = getDateRange(period);
 
-  const [transactions, allTransactions, wishlistItems] = await Promise.all([
-    prisma.transaction.findMany({
-      where: {
-        userId: user.id,
-        ...(validType ? { type: validType } : {}),
-        ...(validCategory ? { category: validCategory } : {}),
-        ...(dateRange ? { date: dateRange } : {}),
-      },
-      orderBy: [{ date: "desc" }, { createdAt: "desc" }],
-    }),
-    prisma.transaction.findMany({
-      where: { userId: user.id },
-      select: { type: true, amount: true, category: true, date: true },
-    }),
-    prisma.wishlistItem.findMany({
-      where: { userId: user.id },
-      orderBy: [{ priority: "desc" }, { createdAt: "desc" }],
-    }),
-  ]);
+  const [transactions, allTransactions, wishlistItems, exchangeRates] =
+    await Promise.all([
+      prisma.transaction.findMany({
+        where: {
+          userId: user.id,
+          ...(validType ? { type: validType } : {}),
+          ...(validCategory ? { category: validCategory } : {}),
+          ...(dateRange ? { date: dateRange } : {}),
+        },
+        orderBy: [{ date: "desc" }, { createdAt: "desc" }],
+      }),
+      prisma.transaction.findMany({
+        where: { userId: user.id },
+        select: { type: true, amount: true, category: true, date: true },
+      }),
+      prisma.wishlistItem.findMany({
+        where: { userId: user.id },
+        orderBy: [{ priority: "desc" }, { createdAt: "desc" }],
+      }),
+      fetchExchangeRates(),
+    ]);
 
   const { totalIncome, totalExpense, balance } = calculateSummary(transactions);
   const { balance: overallBalance } = calculateSummary(allTransactions);
@@ -202,6 +206,11 @@ async function DashboardContent({
       <MonthlyComparisonChart
         data={monthlyComparison}
         trend={spendingTrend}
+      />
+
+      <CurrencyConverterCard
+        balanceVnd={overallBalance}
+        rates={exchangeRates}
       />
 
       <Card>
