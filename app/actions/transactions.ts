@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { requireUser, UnauthorizedError } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { transactionSchema } from "@/lib/validations/transaction";
 
@@ -11,17 +12,18 @@ export type TransactionActionState = {
   fieldErrors?: Record<string, string[] | undefined>;
 };
 
-// Tạm dùng cho mốc fp2 (chưa có Better Auth).
-// Sang Ngày 3 (fp3), ta sẽ thay hàm này bằng requireUser() từ session.
-async function getDemoUserId(): Promise<string> {
-  const user = await prisma.user.findUnique({
-    where: { email: "demo@financeplanner.local" },
-    select: { id: true },
-  });
-  if (!user) {
-    throw new Error("Không tìm thấy tài khoản demo. Hãy chạy npx prisma db seed.");
+async function getAuthorizedUserId(): Promise<
+  { ok: true; userId: string } | { ok: false; message: string }
+> {
+  try {
+    const user = await requireUser();
+    return { ok: true, userId: user.id };
+  } catch (err) {
+    if (err instanceof UnauthorizedError) {
+      return { ok: false, message: err.message };
+    }
+    throw err;
   }
-  return user.id;
 }
 
 function parseLocalDate(dateStr: string): Date {
@@ -34,6 +36,11 @@ export async function createTransactionAction(
   _prevState: TransactionActionState,
   formData: FormData
 ): Promise<TransactionActionState> {
+  const authResult = await getAuthorizedUserId();
+  if (!authResult.ok) {
+    return { success: false, message: authResult.message };
+  }
+
   const raw = {
     amount: formData.get("amount"),
     description: formData.get("description"),
@@ -52,10 +59,9 @@ export async function createTransactionAction(
   }
 
   try {
-    const userId = await getDemoUserId();
     await prisma.transaction.create({
       data: {
-        userId,
+        userId: authResult.userId,
         amount: parsed.data.amount,
         description: parsed.data.description,
         type: parsed.data.type,
@@ -78,6 +84,11 @@ export async function updateTransactionAction(
   _prevState: TransactionActionState,
   formData: FormData
 ): Promise<TransactionActionState> {
+  const authResult = await getAuthorizedUserId();
+  if (!authResult.ok) {
+    return { success: false, message: authResult.message };
+  }
+
   const id = formData.get("id");
   if (typeof id !== "string" || id.trim().length === 0) {
     return { success: false, message: "Thiếu mã giao dịch cần cập nhật." };
@@ -101,9 +112,8 @@ export async function updateTransactionAction(
   }
 
   try {
-    const userId = await getDemoUserId();
     const updated = await prisma.transaction.updateMany({
-      where: { id, userId },
+      where: { id, userId: authResult.userId },
       data: {
         amount: parsed.data.amount,
         description: parsed.data.description,
@@ -133,15 +143,19 @@ export async function updateTransactionAction(
 export async function deleteTransactionAction(
   id: string
 ): Promise<{ success: boolean; message: string }> {
+  const authResult = await getAuthorizedUserId();
+  if (!authResult.ok) {
+    return { success: false, message: authResult.message };
+  }
+
   const parsedId = z.string().min(1).safeParse(id);
   if (!parsedId.success) {
     return { success: false, message: "Mã giao dịch không hợp lệ." };
   }
 
   try {
-    const userId = await getDemoUserId();
     const deleted = await prisma.transaction.deleteMany({
-      where: { id: parsedId.data, userId },
+      where: { id: parsedId.data, userId: authResult.userId },
     });
 
     if (deleted.count === 0) {

@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { hashPassword } from "better-auth/crypto";
 import {
   PrismaClient,
   TransactionType,
@@ -34,11 +35,28 @@ function thisMonthDay(day: number): Date {
 async function main() {
   const demoUser = await prisma.user.upsert({
     where: { email: "demo@financeplanner.local" },
-    update: { name: "Demo User" },
+    update: { name: "Demo User", emailVerified: true },
     create: {
       name: "Demo User",
       email: "demo@financeplanner.local",
       emailVerified: true,
+    },
+  });
+
+  const demoPasswordHash = await hashPassword("Demo@123456");
+  await prisma.account.upsert({
+    where: { id: "demo-credential-account" },
+    update: {
+      accountId: demoUser.id,
+      userId: demoUser.id,
+      password: demoPasswordHash,
+    },
+    create: {
+      id: "demo-credential-account",
+      accountId: demoUser.id,
+      providerId: "credential",
+      userId: demoUser.id,
+      password: demoPasswordHash,
     },
   });
 

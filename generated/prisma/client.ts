@@ -56,3 +56,18 @@ export type Transaction = Prisma.TransactionModel
  * 
  */
 export type WishlistItem = Prisma.WishlistItemModel
+/**
+ * Model Session
+ * 
+ */
+export type Session = Prisma.SessionModel
+/**
+ * Model Account
+ * 
+ */
+export type Account = Prisma.AccountModel
+/**
+ * Model Verification
+ * 
+ */
+export type Verification = Prisma.VerificationModel

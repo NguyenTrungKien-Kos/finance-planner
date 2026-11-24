@@ -1,6 +1,8 @@
 import { Suspense } from "react";
 import { connection } from "next/server";
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { requireUser, UnauthorizedError } from "@/lib/dal";
 import {
   CATEGORIES,
   CATEGORY_LABELS,
@@ -11,6 +13,7 @@ import { DeleteTransactionButton } from "@/components/delete-transaction-button"
 import { ThemeToggle } from "@/components/theme-toggle";
 import { TransactionDialog } from "@/components/transaction-dialog";
 import { TransactionFilters } from "@/components/transaction-filters";
+import { UserNav } from "@/components/user-nav";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -65,6 +68,17 @@ async function DashboardContent({
   searchParams: SearchParamsPromise;
 }) {
   await connection();
+
+  let user;
+  try {
+    user = await requireUser();
+  } catch (err) {
+    if (err instanceof UnauthorizedError) {
+      redirect("/login");
+    }
+    throw err;
+  }
+
   const params = await searchParams;
 
   const rawPeriod = pickSingle(params.period);
@@ -91,6 +105,7 @@ async function DashboardContent({
 
   const transactions = await prisma.transaction.findMany({
     where: {
+      userId: user.id,
       ...(validType ? { type: validType } : {}),
       ...(validCategory ? { category: validCategory } : {}),
       ...(dateRange ? { date: dateRange } : {}),
@@ -240,6 +255,17 @@ async function DashboardContent({
   );
 }
 
+async function HeaderUser() {
+  await connection();
+  let user: { name: string; email: string } | null = null;
+  try {
+    user = await requireUser();
+  } catch {
+    return null;
+  }
+  return <UserNav name={user.name} email={user.email} />;
+}
+
 export default function HomePage({
   searchParams,
 }: {
@@ -251,12 +277,15 @@ export default function HomePage({
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Finance Planner</h1>
           <p className="text-sm text-muted-foreground">
-            Quản lý thu chi cá nhân — Mốc fp2
+            Quản lý thu chi cá nhân
           </p>
         </div>
         <div className="flex items-center gap-2">
           <TransactionDialog mode="create" />
           <ThemeToggle />
+          <Suspense fallback={null}>
+            <HeaderUser />
+          </Suspense>
         </div>
       </header>
 
