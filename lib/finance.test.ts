@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { calculateSummary, calculateWishlistProgress, getDateRange, getReachedMilestones, getWishlistMilestoneNotifications, getCategoryExpenseBreakdown } from "@/lib/finance";
+import {
+  calculateSummary,
+  calculateWishlistProgress,
+  getCategoryExpenseBreakdown,
+  getDateRange,
+  getMonthlyComparison,
+  getReachedMilestones,
+  getSpendingTrend,
+  getWishlistMilestoneNotifications,
+} from "@/lib/finance";
 
 describe("calculateSummary", () => {
   it("tính đúng tổng thu, tổng chi và số dư (Thu - Chi)", () => {
@@ -106,5 +115,96 @@ describe("getCategoryExpenseBreakdown", () => {
         { type: "INCOME", category: "SALARY", amount: 5_000_000 },
       ])
     ).toEqual([]);
+  });
+});
+
+describe("getMonthlyComparison", () => {
+  it("gom nhóm thu, chi, chênh lệch theo tháng và xử lý đúng trường hợp giao năm", () => {
+    const ref = new Date(2026, 0, 15); // 15/01/2026
+    const result = getMonthlyComparison(
+      [
+        { type: "INCOME", amount: 15_000_000, date: new Date(2025, 10, 5) },  // T11/2025
+        { type: "EXPENSE", amount: 4_000_000, date: new Date(2025, 10, 20) }, // T11/2025
+        { type: "EXPENSE", amount: 6_000_000, date: new Date(2025, 11, 10) }, // T12/2025
+        { type: "INCOME", amount: 20_000_000, date: new Date(2026, 0, 2) },   // T1/2026
+        { type: "EXPENSE", amount: 5_000_000, date: new Date(2026, 0, 12) },  // T1/2026
+        { type: "EXPENSE", amount: 9_000_000, date: new Date(2025, 6, 1) },   // Ngoài 3 tháng -> bỏ qua
+      ],
+      3,
+      ref
+    );
+
+    expect(result).toEqual([
+      {
+        monthKey: "2025-11",
+        label: "T11/2025",
+        income: 15_000_000,
+        expense: 4_000_000,
+        balance: 11_000_000,
+      },
+      {
+        monthKey: "2025-12",
+        label: "T12/2025",
+        income: 0,
+        expense: 6_000_000,
+        balance: -6_000_000,
+      },
+      {
+        monthKey: "2026-01",
+        label: "T1/2026",
+        income: 20_000_000,
+        expense: 5_000_000,
+        balance: 15_000_000,
+      },
+    ]);
+  });
+
+  it("trả về mảng rỗng khi monthsCount <= 0", () => {
+    expect(getMonthlyComparison([], 0)).toEqual([]);
+  });
+});
+
+describe("getSpendingTrend", () => {
+  it("tính đúng xu hướng tăng, giảm và không đổi giữa tháng này và tháng trước", () => {
+    const up = getSpendingTrend([
+      { monthKey: "2026-10", label: "T10/2026", income: 0, expense: 4_000_000, balance: -4_000_000 },
+      { monthKey: "2026-11", label: "T11/2026", income: 0, expense: 5_000_000, balance: -5_000_000 },
+    ]);
+    expect(up).toEqual({
+      currentExpense: 5_000_000,
+      previousExpense: 4_000_000,
+      difference: 1_000_000,
+      percentageChange: 25,
+      direction: "up",
+    });
+
+    const down = getSpendingTrend([
+      { monthKey: "2026-10", label: "T10/2026", income: 0, expense: 5_000_000, balance: -5_000_000 },
+      { monthKey: "2026-11", label: "T11/2026", income: 0, expense: 4_000_000, balance: -4_000_000 },
+    ]);
+    expect(down.direction).toBe("down");
+    expect(down.percentageChange).toBe(-20);
+
+    const flat = getSpendingTrend([
+      { monthKey: "2026-10", label: "T10/2026", income: 0, expense: 3_000_000, balance: -3_000_000 },
+      { monthKey: "2026-11", label: "T11/2026", income: 0, expense: 3_000_000, balance: -3_000_000 },
+    ]);
+    expect(flat.direction).toBe("flat");
+    expect(flat.percentageChange).toBe(0);
+  });
+
+  it("trả percentageChange = null khi tháng trước chi tiêu bằng 0", () => {
+    const trend = getSpendingTrend([
+      { monthKey: "2026-10", label: "T10/2026", income: 0, expense: 0, balance: 0 },
+      { monthKey: "2026-11", label: "T11/2026", income: 0, expense: 2_000_000, balance: -2_000_000 },
+    ]);
+
+    expect(trend).toEqual({
+      currentExpense: 2_000_000,
+      previousExpense: 0,
+      difference: 2_000_000,
+      percentageChange: null,
+      direction: "up",
+    });
   });
 });

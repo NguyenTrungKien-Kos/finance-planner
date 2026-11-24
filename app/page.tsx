@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { connection } from "next/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { MonthlyComparisonChart } from "@/components/monthly-comparison-chart";
 import { requireUser, UnauthorizedError } from "@/lib/dal";
 import {
   CATEGORIES,
@@ -12,6 +13,8 @@ import {
   calculateSummary,
   getCategoryExpenseBreakdown,
   getDateRange,
+  getMonthlyComparison,
+  getSpendingTrend,
 } from "@/lib/finance";
 import { DeleteTransactionButton } from "@/components/delete-transaction-button";
 import { ExpensePieChart } from "@/components/expense-pie-chart";
@@ -140,6 +143,8 @@ async function DashboardContent({
       tx.date < thisMonthRange.lt
   );
   const expenseBreakdown = getCategoryExpenseBreakdown(thisMonthExpenses);
+  const monthlyComparison = getMonthlyComparison(allTransactions, 6);
+  const spendingTrend = getSpendingTrend(monthlyComparison);
 
   return (
     <>
@@ -193,6 +198,11 @@ async function DashboardContent({
           balance={overallBalance}
         />
       </div>
+
+      <MonthlyComparisonChart
+        data={monthlyComparison}
+        trend={spendingTrend}
+      />
 
       <Card>
         <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

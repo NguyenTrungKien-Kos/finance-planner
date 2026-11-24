@@ -144,3 +144,103 @@ export function getCategoryExpenseBreakdown(
     }))
     .sort((a, b) => b.amount - a.amount);
 }
+
+export type MonthlyComparisonItem = {
+  monthKey: string;
+  label: string;
+  income: number;
+  expense: number;
+  balance: number;
+};
+
+export type SpendingTrend = {
+  currentExpense: number;
+  previousExpense: number;
+  difference: number;
+  percentageChange: number | null;
+  direction: "up" | "down" | "flat";
+};
+
+export function getMonthlyComparison(
+  transactions: ReadonlyArray<{
+    type: "INCOME" | "EXPENSE";
+    amount: number;
+    date: Date;
+  }>,
+  monthsCount: number = 6,
+  referenceDate: Date = new Date()
+): MonthlyComparisonItem[] {
+  if (monthsCount <= 0) return [];
+
+  const refYear = referenceDate.getFullYear();
+  const refMonth = referenceDate.getMonth();
+  const buckets: MonthlyComparisonItem[] = [];
+  const bucketMap = new Map<string, MonthlyComparisonItem>();
+
+  for (let i = monthsCount - 1; i >= 0; i--) {
+    const d = new Date(refYear, refMonth - i, 1);
+    const year = d.getFullYear();
+    const month = d.getMonth() + 1;
+    const monthKey = `${year}-${String(month).padStart(2, "0")}`;
+    const item: MonthlyComparisonItem = {
+      monthKey,
+      label: `T${month}/${year}`,
+      income: 0,
+      expense: 0,
+      balance: 0,
+    };
+    buckets.push(item);
+    bucketMap.set(monthKey, item);
+  }
+
+  for (const tx of transactions) {
+    if (tx.amount <= 0) continue;
+    const key = `${tx.date.getFullYear()}-${String(tx.date.getMonth() + 1).padStart(2, "0")}`;
+    const bucket = bucketMap.get(key);
+    if (!bucket) continue;
+
+    if (tx.type === "INCOME") {
+      bucket.income += tx.amount;
+    } else {
+      bucket.expense += tx.amount;
+    }
+    bucket.balance = bucket.income - bucket.expense;
+  }
+
+  return buckets;
+}
+
+export function getSpendingTrend(
+  monthlyData: ReadonlyArray<MonthlyComparisonItem>
+): SpendingTrend {
+  if (monthlyData.length === 0) {
+    return {
+      currentExpense: 0,
+      previousExpense: 0,
+      difference: 0,
+      percentageChange: null,
+      direction: "flat",
+    };
+  }
+
+  const current = monthlyData[monthlyData.length - 1];
+  const previous =
+    monthlyData.length >= 2 ? monthlyData[monthlyData.length - 2] : undefined;
+  const currentExpense = current ? current.expense : 0;
+  const previousExpense = previous ? previous.expense : 0;
+  const difference = currentExpense - previousExpense;
+  const direction =
+    difference > 0 ? "up" : difference < 0 ? "down" : "flat";
+  const percentageChange =
+    previousExpense > 0
+      ? Math.round((difference / previousExpense) * 1000) / 10
+      : null;
+
+  return {
+    currentExpense,
+    previousExpense,
+    difference,
+    percentageChange,
+    direction,
+  };
+}
