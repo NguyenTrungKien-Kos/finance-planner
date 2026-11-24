@@ -116,7 +116,7 @@ export function MonthlyComparisonChart({
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-start justify-between gap-4">
+      <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3">
         <div>
           <CardTitle>So sánh thu chi 6 tháng gần nhất</CardTitle>
           <TrendSummary trend={trend} />

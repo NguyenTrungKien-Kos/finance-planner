@@ -224,63 +224,53 @@ async function DashboardContent({
             category={validCategory ?? "ALL"}
           />
         </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Ngày</TableHead>
-                <TableHead>Mô tả</TableHead>
-                <TableHead>Danh mục</TableHead>
-                <TableHead>Loại</TableHead>
-                <TableHead className="text-right">Số tiền</TableHead>
-                <TableHead className="text-right">Thao tác</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {transactions.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={6}
-                    className="py-8 text-center text-muted-foreground"
+                <CardContent>
+          {transactions.length === 0 ? (
+            <p className="py-8 text-center text-sm text-muted-foreground">
+              Chưa có giao dịch nào khớp bộ lọc.
+            </p>
+          ) : (
+            <>
+              {/* Giao diện thẻ gọn cho điện thoại (không cần cuộn ngang) */}
+              <div className="space-y-3 md:hidden">
+                {transactions.map((tx) => (
+                  <div
+                    key={tx.id}
+                    className="space-y-2 rounded-lg border p-3 text-sm"
                   >
-                    Chưa có giao dịch nào khớp bộ lọc.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                transactions.map((tx) => (
-                  <TableRow key={tx.id}>
-                    <TableCell className="whitespace-nowrap text-muted-foreground">
-                      {formatDate(tx.date)}
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {tx.description}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">
-                        {CATEGORY_LABELS[tx.category] ?? tx.category}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          tx.type === "INCOME" ? "default" : "secondary"
-                        }
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="truncate font-medium">{tx.description}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {formatDate(tx.date)}
+                        </p>
+                      </div>
+                      <span
+                        className={`shrink-0 font-mono font-semibold ${
+                          tx.type === "INCOME"
+                            ? "text-emerald-600 dark:text-emerald-400"
+                            : "text-rose-600 dark:text-rose-400"
+                        }`}
                       >
-                        {tx.type === "INCOME" ? "Thu" : "Chi"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell
-                      className={`text-right font-mono font-medium whitespace-nowrap ${
-                        tx.type === "INCOME"
-                          ? "text-emerald-600 dark:text-emerald-400"
-                          : "text-rose-600 dark:text-rose-400"
-                      }`}
-                    >
-                      {tx.type === "INCOME" ? "+" : "-"}
-                      {formatVND(tx.amount)}
-                    </TableCell>
-                    <TableCell className="text-right whitespace-nowrap">
-                      <div className="inline-flex items-center justify-end gap-1">
+                        {tx.type === "INCOME" ? "+" : "-"}
+                        {formatVND(tx.amount)}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <Badge variant="outline">
+                          {CATEGORY_LABELS[tx.category] ?? tx.category}
+                        </Badge>
+                        <Badge
+                          variant={
+                            tx.type === "INCOME" ? "default" : "secondary"
+                          }
+                        >
+                          {tx.type === "INCOME" ? "Thu" : "Chi"}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-1">
                         <TransactionDialog
                           mode="edit"
                           transaction={{
@@ -297,12 +287,83 @@ async function DashboardContent({
                           description={tx.description}
                         />
                       </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Giao diện bảng cho tablet / máy tính */}
+              <div className="hidden md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Ngày</TableHead>
+                      <TableHead>Mô tả</TableHead>
+                      <TableHead>Danh mục</TableHead>
+                      <TableHead>Loại</TableHead>
+                      <TableHead className="text-right">Số tiền</TableHead>
+                      <TableHead className="text-right">Thao tác</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {transactions.map((tx) => (
+                      <TableRow key={tx.id}>
+                        <TableCell className="whitespace-nowrap text-muted-foreground">
+                          {formatDate(tx.date)}
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          {tx.description}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">
+                            {CATEGORY_LABELS[tx.category] ?? tx.category}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={
+                              tx.type === "INCOME" ? "default" : "secondary"
+                            }
+                          >
+                            {tx.type === "INCOME" ? "Thu" : "Chi"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell
+                          className={`text-right font-mono font-medium whitespace-nowrap ${
+                            tx.type === "INCOME"
+                              ? "text-emerald-600 dark:text-emerald-400"
+                              : "text-rose-600 dark:text-rose-400"
+                          }`}
+                        >
+                          {tx.type === "INCOME" ? "+" : "-"}
+                          {formatVND(tx.amount)}
+                        </TableCell>
+                        <TableCell className="text-right whitespace-nowrap">
+                          <div className="inline-flex items-center justify-end gap-1">
+                            <TransactionDialog
+                              mode="edit"
+                              transaction={{
+                                id: tx.id,
+                                amount: tx.amount,
+                                description: tx.description,
+                                type: tx.type,
+                                category: tx.category,
+                                date: formatDateInput(tx.date),
+                              }}
+                            />
+                            <DeleteTransactionButton
+                              id={tx.id}
+                              description={tx.description}
+                            />
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
     </>
@@ -326,7 +387,7 @@ export default function HomePage({
   searchParams: SearchParamsPromise;
 }) {
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-8 sm:px-6">
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 overflow-x-hidden px-4 py-8 sm:px-6">
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Finance Planner</h1>

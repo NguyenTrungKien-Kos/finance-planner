@@ -60,7 +60,7 @@ export function ExpensePieChart({ data }: { data: CategoryExpenseItem[] }) {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between gap-4">
+      <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3">
         <div>
           <CardTitle>Chi tiêu tháng hiện tại theo danh mục</CardTitle>
           <p className="mt-1 text-xs text-muted-foreground">
@@ -119,7 +119,7 @@ export function ExpensePieChart({ data }: { data: CategoryExpenseItem[] }) {
                     ))}
                   </Pie>
                   <ChartLegend
-                    content={<ChartLegendContent nameKey="category" />}
+                    content={<ChartLegendContent nameKey="category" className="flex-wrap gap-x-4 gap-y-1.5" />}
                   />
                 </PieChart>
               </ChartContainer>

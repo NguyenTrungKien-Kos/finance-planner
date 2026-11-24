@@ -1,6 +1,7 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
+import { PwaRegister } from "@/components/pwa-register";
 import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 
@@ -17,6 +18,22 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Finance Planner",
   description: "Quản lý thu chi & mục tiêu tiết kiệm cá nhân",
+  applicationName: "Finance Planner",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Finance Planner",
+  },
+  icons: {
+    icon: "/icon-192.png",
+    apple: "/icon-192.png",
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#0f172a",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -35,6 +52,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         >
           {children}
           <Toaster richColors position="top-right" />
+          <PwaRegister />
         </ThemeProvider>
       </body>
     </html>

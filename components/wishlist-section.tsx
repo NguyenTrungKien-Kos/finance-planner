@@ -47,7 +47,7 @@ export function WishlistSection({
         balance={balance}
       />
 
-      <CardHeader className="flex flex-row items-center justify-between gap-4">
+      <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3">
         <div>
           <CardTitle>Wishlist mục tiêu ({items.length} món)</CardTitle>
           <p className="mt-1 text-xs text-muted-foreground">
