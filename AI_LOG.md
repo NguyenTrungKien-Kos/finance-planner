@@ -6,7 +6,7 @@
 | Ngày | Công cụ | Việc nhờ AI | Prompt (tóm tắt) | Kết quả dùng thế nào | Mình đã kiểm chứng / sửa gì | Commit/PR |
 |---|---|---|---|---|---|---|
 | 23/11/2026 | Antigravity AI | Hỗ trợ setup Next.js 16.4, Prisma 7, seed 32 giao dịch và dựng Dashboard chỉ đọc (Mốc fp1) | Đề nghị hướng dẫn từng bước setup Neon + Prisma 7, sinh `seed.ts` (>= 30 giao dịch) và `app/page.tsx` chỉ đọc | Copy code vào từng file và tự chạy migrate, seed, dev server | Đã chạy `prisma migrate dev`, `prisma db seed` (32 giao dịch), sửa lỗi `dynamic` xung đột `cacheComponents` bằng `<Suspense>` + `connection()`, kiểm tra `lint`/`typecheck`/`build` đạt | `fp1` |
-
+| 24/11/2026 | Antigravity AI | Sinh Zod 4 schema, Server Actions CRUD giao dịch, bộ lọc URL `searchParams` và 8 unit test Vitest 5 (Mốc fp2) | Đề nghị hướng dẫn từng bước CRUD giao dịch, lọc URL phía server và viết unit test | Tự cài gói (`@types/node@24`, `vitest@5`, `zod@4`, `shadcn/ui`), tự dán code vào từng file và test trên UI | Đã tự test nhập sai form để kiểm tra lỗi Zod dưới từng ô, test copy URL lọc mở tab mới; tự đổi `balance` sang `+` để thấy test báo đỏ (`15000000` vs `5000000`) rồi sửa lại `-` cho 8/8 test xanh; chạy `lint`/`typecheck`/`vitest`/`build` đạt | `fp2` |
 ## Tự đánh giá cuối bài
 - Phần mình tự làm hoàn toàn:
 - Phần AI giúp nhiều nhất và mình đã hiểu nó thế nào:
