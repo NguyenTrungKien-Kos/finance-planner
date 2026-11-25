@@ -14,6 +14,14 @@ export const wishlistSchema = z.object({
   priority: z.enum(PRIORITIES, {
     error: "Vui lòng chọn mức ưu tiên hợp lệ",
   }),
+  deadline: z
+    .string()
+    .trim()
+    .optional()
+    .transform((val) => (val && val.length > 0 ? val : undefined))
+    .refine((val) => !val || !Number.isNaN(Date.parse(val)), {
+      error: "Hạn chót không hợp lệ",
+    }),
 });
 
 export type WishlistInput = z.infer<typeof wishlistSchema>;

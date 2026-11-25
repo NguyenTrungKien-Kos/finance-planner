@@ -63,13 +63,14 @@ model Transaction {
 }
 
 model WishlistItem {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   name      String
   cost      Int
-  priority  Priority @default(MEDIUM)
-  createdAt DateTime @default(now())
+  priority  Priority  @default(MEDIUM)
+  deadline  DateTime?
+  createdAt DateTime  @default(now())
 }
 
 model CategoryBudget {

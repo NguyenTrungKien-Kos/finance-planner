@@ -109,6 +109,7 @@ export const WishlistItemScalarFieldEnum = {
   name: 'name',
   cost: 'cost',
   priority: 'priority',
+  deadline: 'deadline',
   createdAt: 'createdAt'
 } as const
 

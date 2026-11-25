@@ -1,5 +1,8 @@
 import { PRIORITIES, PRIORITY_LABELS } from "@/lib/constants";
-import { calculateWishlistProgress } from "@/lib/finance";
+import {
+  calculateMonthlySavingsSuggestion,
+  calculateWishlistProgress,
+} from "@/lib/finance";
 import { DeleteWishlistButton } from "@/components/delete-wishlist-button";
 import { WishlistDialog } from "@/components/wishlist-dialog";
 import { WishlistMilestoneNotifier } from "@/components/wishlist-milestone-notifier";
@@ -12,6 +15,7 @@ type WishlistItemData = {
   name: string;
   cost: number;
   priority: (typeof PRIORITIES)[number];
+  deadline: Date | null;
 };
 
 function formatVND(amount: number): string {
@@ -19,6 +23,14 @@ function formatVND(amount: number): string {
     style: "currency",
     currency: "VND",
   }).format(amount);
+}
+
+function formatDate(date: Date): string {
+  return new Intl.DateTimeFormat("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(date);
 }
 
 const PRIORITY_VARIANTS: Record<
@@ -68,6 +80,11 @@ export function WishlistSection({
             {items.map((item) => {
               const progress = calculateWishlistProgress(balance, item.cost);
               const remaining = Math.max(0, item.cost - Math.max(0, balance));
+              const suggestion = calculateMonthlySavingsSuggestion(
+                item.cost,
+                balance,
+                item.deadline
+              );
 
               return (
                 <div
@@ -75,11 +92,22 @@ export function WishlistSection({
                   className="space-y-2 rounded-lg border p-3.5"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <span className="font-medium">{item.name}</span>
                       <Badge variant={PRIORITY_VARIANTS[item.priority]}>
                         {PRIORITY_LABELS[item.priority]}
                       </Badge>
+                      {item.deadline && (
+                        <Badge
+                          variant={
+                            suggestion?.isOverdue ? "destructive" : "outline"
+                          }
+                        >
+                          {suggestion?.isOverdue
+                            ? `Quá hạn (${formatDate(item.deadline)})`
+                            : `Hạn: ${formatDate(item.deadline)}`}
+                        </Badge>
+                      )}
                     </div>
 
                     <div className="flex items-center gap-1">
@@ -105,6 +133,20 @@ export function WishlistSection({
                         : `Còn thiếu ${formatVND(remaining)}`}
                     </span>
                   </div>
+
+                  {suggestion && !suggestion.isCompleted && (
+                    <p
+                      className={`text-xs ${
+                        suggestion.isOverdue
+                          ? "font-medium text-destructive"
+                          : "text-emerald-700 dark:text-emerald-400"
+                      }`}
+                    >
+                      {suggestion.isOverdue
+                        ? `Đã quá hạn chót — cần bổ sung thêm ${formatVND(suggestion.remaining)}`
+                        : `Gợi ý để dành: ${formatVND(suggestion.monthlySuggested)}/tháng (còn ${suggestion.monthsRemaining} tháng)`}
+                    </p>
+                  )}
                 </div>
               );
             })}

@@ -26,6 +26,12 @@ async function getAuthorizedUserId(): Promise<
   }
 }
 
+function parseLocalDate(dateStr: string): Date {
+  return dateStr.includes("T")
+    ? new Date(dateStr)
+    : new Date(`${dateStr}T12:00:00`);
+}
+
 export async function createWishlistAction(
   _prevState: WishlistActionState,
   formData: FormData
@@ -35,10 +41,12 @@ export async function createWishlistAction(
     return { success: false, message: authResult.message };
   }
 
+  const rawDeadline = formData.get("deadline");
   const raw = {
     name: formData.get("name"),
     cost: formData.get("cost"),
     priority: formData.get("priority"),
+    deadline: typeof rawDeadline === "string" ? rawDeadline : undefined,
   };
 
   const parsed = wishlistSchema.safeParse(raw);
@@ -57,6 +65,9 @@ export async function createWishlistAction(
         name: parsed.data.name,
         cost: parsed.data.cost,
         priority: parsed.data.priority,
+        deadline: parsed.data.deadline
+          ? parseLocalDate(parsed.data.deadline)
+          : null,
       },
     });
 
@@ -84,10 +95,12 @@ export async function updateWishlistAction(
     return { success: false, message: "Thiếu mã món đồ cần cập nhật." };
   }
 
+  const rawDeadline = formData.get("deadline");
   const raw = {
     name: formData.get("name"),
     cost: formData.get("cost"),
     priority: formData.get("priority"),
+    deadline: typeof rawDeadline === "string" ? rawDeadline : undefined,
   };
 
   const parsed = wishlistSchema.safeParse(raw);
@@ -106,6 +119,9 @@ export async function updateWishlistAction(
         name: parsed.data.name,
         cost: parsed.data.cost,
         priority: parsed.data.priority,
+        deadline: parsed.data.deadline
+          ? parseLocalDate(parsed.data.deadline)
+          : null,
       },
     });
 

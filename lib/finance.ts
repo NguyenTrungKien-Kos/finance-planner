@@ -56,6 +56,73 @@ export function calculateWishlistProgress(
   return Math.min(100, Math.max(0, percent));
 }
 
+export type MonthlySavingsSuggestion = {
+  remaining: number;
+  monthsRemaining: number;
+  monthlySuggested: number;
+  isOverdue: boolean;
+  isCompleted: boolean;
+};
+
+export function calculateMonthlySavingsSuggestion(
+  cost: number,
+  balance: number,
+  deadline: Date | null | undefined,
+  referenceDate: Date = new Date()
+): MonthlySavingsSuggestion | null {
+  if (!deadline || cost <= 0) {
+    return null;
+  }
+
+  const effectiveBalance = Math.max(0, balance);
+  const remaining = Math.max(0, cost - effectiveBalance);
+
+  if (remaining === 0) {
+    return {
+      remaining: 0,
+      monthsRemaining: 0,
+      monthlySuggested: 0,
+      isOverdue: false,
+      isCompleted: true,
+    };
+  }
+
+  const startOfToday = new Date(
+    referenceDate.getFullYear(),
+    referenceDate.getMonth(),
+    referenceDate.getDate()
+  );
+  const deadlineDay = new Date(
+    deadline.getFullYear(),
+    deadline.getMonth(),
+    deadline.getDate()
+  );
+
+  if (deadlineDay < startOfToday) {
+    return {
+      remaining,
+      monthsRemaining: 0,
+      monthlySuggested: remaining,
+      isOverdue: true,
+      isCompleted: false,
+    };
+  }
+
+  const monthsDiff =
+    (deadline.getFullYear() - referenceDate.getFullYear()) * 12 +
+    (deadline.getMonth() - referenceDate.getMonth()) +
+    1;
+  const monthsRemaining = Math.max(1, monthsDiff);
+
+  return {
+    remaining,
+    monthsRemaining,
+    monthlySuggested: Math.ceil(remaining / monthsRemaining),
+    isOverdue: false,
+    isCompleted: false,
+  };
+}
+
 export const WISHLIST_MILESTONES = [50, 75, 100] as const;
 
 export type WishlistMilestoneNotification = {

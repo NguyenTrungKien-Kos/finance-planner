@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   calculateBudgetStatuses,
+  calculateMonthlySavingsSuggestion,
   calculateSummary,
   calculateWishlistProgress,
   getBudgetAlertNotifications,
@@ -65,6 +66,52 @@ describe("calculateWishlistProgress", () => {
     expect(calculateWishlistProgress(1_000_000, 0)).toBe(0);
     expect(calculateWishlistProgress(1_500_000, 3_000_000)).toBe(50);
     expect(calculateWishlistProgress(10_000_000, 4_000_000)).toBe(100);
+  });
+});
+
+describe("calculateMonthlySavingsSuggestion", () => {
+  const ref = new Date(2026, 10, 25); // 25/11/2026
+
+  it("trả về null khi không có hạn chót", () => {
+    expect(calculateMonthlySavingsSuggestion(10_000_000, 2_000_000, null, ref)).toBeNull();
+  });
+
+  it("trả về isCompleted = true khi đã đủ tiền", () => {
+    expect(
+      calculateMonthlySavingsSuggestion(5_000_000, 6_000_000, new Date(2027, 1, 1), ref)
+    ).toEqual({
+      remaining: 0,
+      monthsRemaining: 0,
+      monthlySuggested: 0,
+      isOverdue: false,
+      isCompleted: true,
+    });
+  });
+
+  it("tính đúng số tháng còn lại và gợi ý mỗi tháng (làm tròn lên)", () => {
+    // T11/2026 -> T2/2027 = 4 tháng (T11, T12, T1, T2)
+    // Còn thiếu: 10.000.000 - 1.000.000 = 9.000.000 -> 2.250.000/tháng
+    expect(
+      calculateMonthlySavingsSuggestion(10_000_000, 1_000_000, new Date(2027, 1, 15), ref)
+    ).toEqual({
+      remaining: 9_000_000,
+      monthsRemaining: 4,
+      monthlySuggested: 2_250_000,
+      isOverdue: false,
+      isCompleted: false,
+    });
+  });
+
+  it("xử lý số dư âm như 0 và đánh dấu quá hạn khi deadline < hôm nay", () => {
+    expect(
+      calculateMonthlySavingsSuggestion(4_000_000, -500_000, new Date(2026, 10, 20), ref)
+    ).toEqual({
+      remaining: 4_000_000,
+      monthsRemaining: 0,
+      monthlySuggested: 4_000_000,
+      isOverdue: true,
+      isCompleted: false,
+    });
   });
 });
 

@@ -34,6 +34,7 @@ export type EditableWishlistItem = {
   name: string;
   cost: number;
   priority: (typeof PRIORITIES)[number];
+  deadline: Date | string | null;
 };
 
 type WishlistDialogProps =
@@ -41,6 +42,16 @@ type WishlistDialogProps =
   | { mode: "edit"; item: EditableWishlistItem };
 
 const INITIAL_STATE: WishlistActionState = { success: false };
+
+function formatDateInput(value: Date | string | null | undefined): string {
+  if (!value) return "";
+  const date = typeof value === "string" ? new Date(value) : value;
+  if (Number.isNaN(date.getTime())) return "";
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
 
 function WishlistForm({
   mode,
@@ -130,6 +141,21 @@ function WishlistForm({
             </p>
           )}
         </div>
+      </div>
+
+      <div className="space-y-1.5">
+        <Label htmlFor="wl-deadline">Hạn chót (tùy chọn)</Label>
+        <Input
+          id="wl-deadline"
+          name="deadline"
+          type="date"
+          defaultValue={formatDateInput(item?.deadline)}
+        />
+        {state.fieldErrors?.deadline?.[0] && (
+          <p className="text-xs text-destructive">
+            {state.fieldErrors.deadline[0]}
+          </p>
+        )}
       </div>
 
       <DialogFooter>
