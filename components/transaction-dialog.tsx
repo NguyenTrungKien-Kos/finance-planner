@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
-import { Pencil, Plus } from "lucide-react";
+import { Loader2, Pencil, Plus, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import {
   createTransactionAction,
@@ -76,6 +76,10 @@ function TransactionForm({
   const [category, setCategory] = useState<(typeof CATEGORIES)[number]>(
     transaction?.category ?? "FOOD"
   );
+  const [description, setDescription] = useState<string>(
+    transaction?.description ?? ""
+  );
+  const [isSuggesting, setIsSuggesting] = useState(false);
 
   useEffect(() => {
     if (state.success) {
@@ -85,6 +89,45 @@ function TransactionForm({
       toast.error(state.message);
     }
   }, [state, onSuccess]);
+
+  const handleSuggestCategory = async () => {
+    const trimmed = description.trim();
+    if (trimmed.length < 2) {
+      toast.error("Vui lòng nhập mô tả ít nhất 2 ký tự trước khi gợi ý.");
+      return;
+    }
+
+    setIsSuggesting(true);
+    try {
+      const response = await fetch("/api/ai/suggest-category", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          description: trimmed,
+          type,
+        }),
+      });
+
+      const data = (await response.json()) as {
+        category?: (typeof CATEGORIES)[number];
+        error?: string;
+      };
+
+      if (!response.ok || !data.category) {
+        toast.error(data.error ?? "Không thể gợi ý danh mục lúc này.");
+        return;
+      }
+
+      setCategory(data.category);
+      toast.success(`Đã gợi ý danh mục: ${CATEGORY_LABELS[data.category]}`);
+    } catch {
+      toast.error("Lỗi kết nối khi gọi gợi ý AI.");
+    } finally {
+      setIsSuggesting(false);
+    }
+  };
 
   return (
     <form action={formAction} className="space-y-4">
@@ -183,12 +226,29 @@ function TransactionForm({
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor="tx-description">Mô tả (1–120 ký tự)</Label>
+        <div className="flex items-center justify-between gap-2">
+          <Label htmlFor="tx-description">Mô tả (1–120 ký tự)</Label>
+          <Button
+            type="button"
+            variant="outline"
+            size="xs"
+            onClick={handleSuggestCategory}
+            disabled={isSuggesting || isPending || description.trim().length < 2}
+          >
+            {isSuggesting ? (
+              <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Sparkles className="mr-1 h-3.5 w-3.5" />
+            )}
+            {isSuggesting ? "Đang gợi ý..." : "Gợi ý AI"}
+          </Button>
+        </div>
         <Input
           id="tx-description"
           name="description"
           placeholder="Ví dụ: Cơm trưa văn phòng"
-          defaultValue={transaction?.description ?? ""}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
         />
         {state.fieldErrors?.description?.[0] && (
           <p className="text-xs text-destructive">
