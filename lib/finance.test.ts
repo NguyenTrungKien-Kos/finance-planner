@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  calculateBudgetStatuses,
   calculateSummary,
   calculateWishlistProgress,
+  getBudgetAlertNotifications,
   getCategoryExpenseBreakdown,
   getDateRange,
   getMonthlyComparison,
@@ -206,5 +208,71 @@ describe("getSpendingTrend", () => {
       percentageChange: null,
       direction: "up",
     });
+  });
+});
+
+describe("calculateBudgetStatuses", () => {
+  it("tính đúng số tiền đã chi theo tháng/danh mục, % và phân loại SAFE / WARNING / EXCEEDED", () => {
+    const budgets = [
+      { id: "b-1", category: "FOOD", month: 11, year: 2026, limit: 2_000_000 },
+      { id: "b-2", category: "TRANSPORT", month: 11, year: 2026, limit: 1_000_000 },
+      { id: "b-3", category: "SHOPPING", month: 11, year: 2026, limit: 1_000_000 },
+    ];
+
+    const transactions = [
+      { type: "EXPENSE" as const, category: "FOOD", amount: 1_600_000, date: new Date(2026, 10, 5) },     // T11 -> 80% WARNING
+      { type: "EXPENSE" as const, category: "FOOD", amount: 900_000, date: new Date(2026, 9, 25) },       // T10 -> bỏ qua
+      { type: "INCOME" as const, category: "FOOD", amount: 5_000_000, date: new Date(2026, 10, 10) },     // INCOME -> bỏ qua
+      { type: "EXPENSE" as const, category: "TRANSPORT", amount: 1_200_000, date: new Date(2026, 10, 8) },// 120% EXCEEDED
+      { type: "EXPENSE" as const, category: "SHOPPING", amount: 500_000, date: new Date(2026, 10, 12) },  // 50% SAFE
+    ];
+
+    const statuses = calculateBudgetStatuses(budgets, transactions);
+
+    expect(statuses.map((s) => s.id)).toEqual(["b-2", "b-1", "b-3"]);
+    expect(statuses[0]).toMatchObject({
+      spent: 1_200_000,
+      remaining: -200_000,
+      percentage: 120,
+      progressPercent: 100,
+      alertLevel: "EXCEEDED",
+    });
+    expect(statuses[1]).toMatchObject({
+      spent: 1_600_000,
+      remaining: 400_000,
+      percentage: 80,
+      progressPercent: 80,
+      alertLevel: "WARNING",
+    });
+    expect(statuses[2]).toMatchObject({
+      spent: 500_000,
+      remaining: 500_000,
+      percentage: 50,
+      progressPercent: 50,
+      alertLevel: "SAFE",
+    });
+  });
+});
+
+describe("getBudgetAlertNotifications", () => {
+  it("chỉ thông báo mốc cao nhất khi nhảy cóc vượt 100% và không lặp lại mốc đã báo", () => {
+    const statuses = calculateBudgetStatuses(
+      [{ id: "b-1", category: "FOOD", month: 11, year: 2026, limit: 1_000_000 }],
+      [{ type: "EXPENSE", category: "FOOD", amount: 1_100_000, date: new Date(2026, 10, 15) }]
+    );
+
+    const first = getBudgetAlertNotifications(statuses, new Set(), { FOOD: "Ăn uống" });
+    expect(first.notifications).toHaveLength(1);
+    expect(first.notifications[0]?.threshold).toBe(100);
+    expect(first.notifications[0]?.message).toContain("Ăn uống");
+    expect(first.notifications[0]?.message).toContain("vượt 100%");
+    expect(first.keysToMark).toEqual(["b-1:2026-11:80", "b-1:2026-11:100"]);
+
+    const second = getBudgetAlertNotifications(
+      statuses,
+      new Set(first.keysToMark),
+      { FOOD: "Ăn uống" }
+    );
+    expect(second.notifications).toHaveLength(0);
   });
 });

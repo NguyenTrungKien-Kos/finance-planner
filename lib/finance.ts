@@ -244,3 +244,126 @@ export function getSpendingTrend(
     direction,
   };
 }
+
+export type BudgetAlertLevel = "SAFE" | "WARNING" | "EXCEEDED";
+
+export type BudgetStatusItem = {
+  id: string;
+  category: string;
+  month: number;
+  year: number;
+  limit: number;
+  spent: number;
+  remaining: number;
+  percentage: number;
+  progressPercent: number;
+  alertLevel: BudgetAlertLevel;
+};
+
+export function calculateBudgetStatuses(
+  budgets: ReadonlyArray<{
+    id: string;
+    category: string;
+    month: number;
+    year: number;
+    limit: number;
+  }>,
+  transactions: ReadonlyArray<{
+    type: "INCOME" | "EXPENSE";
+    category: string;
+    amount: number;
+    date: Date;
+  }>
+): BudgetStatusItem[] {
+  const spentMap = new Map<string, number>();
+
+  for (const tx of transactions) {
+    if (tx.type !== "EXPENSE" || tx.amount <= 0) continue;
+    const key = `${tx.date.getFullYear()}-${tx.date.getMonth() + 1}:${tx.category}`;
+    spentMap.set(key, (spentMap.get(key) ?? 0) + tx.amount);
+  }
+
+  return budgets
+    .map((budget) => {
+      const key = `${budget.year}-${budget.month}:${budget.category}`;
+      const spent = spentMap.get(key) ?? 0;
+      const remaining = budget.limit - spent;
+      const percentage =
+        budget.limit > 0
+          ? Math.round((spent / budget.limit) * 1000) / 10
+          : 0;
+      const progressPercent = Math.min(100, Math.max(0, Math.round(percentage)));
+      const alertLevel: BudgetAlertLevel =
+        percentage >= 100 ? "EXCEEDED" : percentage >= 80 ? "WARNING" : "SAFE";
+
+      return {
+        id: budget.id,
+        category: budget.category,
+        month: budget.month,
+        year: budget.year,
+        limit: budget.limit,
+        spent,
+        remaining,
+        percentage,
+        progressPercent,
+        alertLevel,
+      };
+    })
+    .sort((a, b) => b.percentage - a.percentage);
+}
+
+export const BUDGET_ALERT_THRESHOLDS = [80, 100] as const;
+
+export type BudgetAlertNotification = {
+  key: string;
+  budgetId: string;
+  category: string;
+  threshold: 80 | 100;
+  percentage: number;
+  message: string;
+};
+
+export function getBudgetAlertNotifications(
+  statuses: ReadonlyArray<BudgetStatusItem>,
+  notifiedKeys: ReadonlySet<string>,
+  categoryLabels: Record<string, string> = {}
+): {
+  notifications: BudgetAlertNotification[];
+  keysToMark: string[];
+} {
+  const notifications: BudgetAlertNotification[] = [];
+  const keysToMark: string[] = [];
+
+  for (const status of statuses) {
+    const reached = BUDGET_ALERT_THRESHOLDS.filter(
+      (t) => status.percentage >= t
+    );
+    const unnotified = reached.filter(
+      (t) => !notifiedKeys.has(`${status.id}:${status.year}-${status.month}:${t}`)
+    );
+
+    if (unnotified.length === 0) continue;
+
+    for (const t of unnotified) {
+      keysToMark.push(`${status.id}:${status.year}-${status.month}:${t}`);
+    }
+
+    const highest = unnotified[unnotified.length - 1];
+    const label = categoryLabels[status.category] ?? status.category;
+    const message =
+      highest === 100
+        ? `Chi tiêu ${label} tháng ${status.month}/${status.year} đã vượt 100% ngân sách (${status.percentage}%)!`
+        : `Chi tiêu ${label} tháng ${status.month}/${status.year} đã chạm ${status.percentage}% ngân sách (cảnh báo 80%).`;
+
+    notifications.push({
+      key: `${status.id}:${status.year}-${status.month}:${highest}`,
+      budgetId: status.id,
+      category: status.category,
+      threshold: highest,
+      percentage: status.percentage,
+      message,
+    });
+  }
+
+  return { notifications, keysToMark };
+}

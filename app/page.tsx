@@ -3,6 +3,8 @@ import { connection } from "next/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { fetchExchangeRates } from "@/lib/exchange-rates";
+import { BudgetAlertNotifier } from "@/components/budget-alert-notifier";
+import { BudgetSection } from "@/components/budget-section";
 import { CurrencyConverterCard } from "@/components/currency-converter-card";
 import { MonthlyComparisonChart } from "@/components/monthly-comparison-chart";
 import { requireUser, UnauthorizedError } from "@/lib/dal";
@@ -12,6 +14,7 @@ import {
   TRANSACTION_TYPES,
 } from "@/lib/constants";
 import {
+  calculateBudgetStatuses,
   calculateSummary,
   getCategoryExpenseBreakdown,
   getDateRange,
@@ -113,28 +116,44 @@ async function DashboardContent({
     : undefined;
 
   const dateRange = getDateRange(period);
+  const now = new Date();
+  const currentMonth = now.getMonth() + 1;
+  const currentYear = now.getFullYear();
 
-  const [transactions, allTransactions, wishlistItems, exchangeRates] =
-    await Promise.all([
-      prisma.transaction.findMany({
-        where: {
-          userId: user.id,
-          ...(validType ? { type: validType } : {}),
-          ...(validCategory ? { category: validCategory } : {}),
-          ...(dateRange ? { date: dateRange } : {}),
-        },
-        orderBy: [{ date: "desc" }, { createdAt: "desc" }],
-      }),
-      prisma.transaction.findMany({
-        where: { userId: user.id },
-        select: { type: true, amount: true, category: true, date: true },
-      }),
-      prisma.wishlistItem.findMany({
-        where: { userId: user.id },
-        orderBy: [{ priority: "desc" }, { createdAt: "desc" }],
-      }),
-      fetchExchangeRates(),
-    ]);
+  const [
+    transactions,
+    allTransactions,
+    wishlistItems,
+    categoryBudgets,
+    exchangeRates,
+  ] = await Promise.all([
+    prisma.transaction.findMany({
+      where: {
+        userId: user.id,
+        ...(validType ? { type: validType } : {}),
+        ...(validCategory ? { category: validCategory } : {}),
+        ...(dateRange ? { date: dateRange } : {}),
+      },
+      orderBy: [{ date: "desc" }, { createdAt: "desc" }],
+    }),
+    prisma.transaction.findMany({
+      where: { userId: user.id },
+      select: { type: true, amount: true, category: true, date: true },
+    }),
+    prisma.wishlistItem.findMany({
+      where: { userId: user.id },
+      orderBy: [{ priority: "desc" }, { createdAt: "desc" }],
+    }),
+    prisma.categoryBudget.findMany({
+      where: {
+        userId: user.id,
+        month: currentMonth,
+        year: currentYear,
+      },
+      orderBy: { category: "asc" },
+    }),
+    fetchExchangeRates(),
+  ]);
 
   const { totalIncome, totalExpense, balance } = calculateSummary(transactions);
   const { balance: overallBalance } = calculateSummary(allTransactions);
@@ -149,9 +168,15 @@ async function DashboardContent({
   const expenseBreakdown = getCategoryExpenseBreakdown(thisMonthExpenses);
   const monthlyComparison = getMonthlyComparison(allTransactions, 6);
   const spendingTrend = getSpendingTrend(monthlyComparison);
+  const budgetStatuses = calculateBudgetStatuses(
+    categoryBudgets,
+    allTransactions
+  );
 
   return (
     <>
+      <BudgetAlertNotifier userId={user.id} statuses={budgetStatuses} />
+
       <section
         aria-label="Thống kê tài chính"
         className="grid gap-4 sm:grid-cols-3"
@@ -203,6 +228,12 @@ async function DashboardContent({
         />
       </div>
 
+      <BudgetSection
+        month={currentMonth}
+        year={currentYear}
+        statuses={budgetStatuses}
+      />
+
       <MonthlyComparisonChart
         data={monthlyComparison}
         trend={spendingTrend}
@@ -224,7 +255,7 @@ async function DashboardContent({
             category={validCategory ?? "ALL"}
           />
         </CardHeader>
-                <CardContent>
+        <CardContent>
           {transactions.length === 0 ? (
             <p className="py-8 text-center text-sm text-muted-foreground">
               Chưa có giao dịch nào khớp bộ lọc.

@@ -400,6 +400,7 @@ export const ModelName = {
   User: 'User',
   Transaction: 'Transaction',
   WishlistItem: 'WishlistItem',
+  CategoryBudget: 'CategoryBudget',
   Session: 'Session',
   Account: 'Account',
   Verification: 'Verification'
@@ -418,7 +419,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "transaction" | "wishlistItem" | "session" | "account" | "verification"
+    modelProps: "user" | "transaction" | "wishlistItem" | "categoryBudget" | "session" | "account" | "verification"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -641,6 +642,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.WishlistItemCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.WishlistItemCountAggregateOutputType> | number
+        }
+      }
+    }
+    CategoryBudget: {
+      payload: Prisma.$CategoryBudgetPayload<ExtArgs>
+      fields: Prisma.CategoryBudgetFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.CategoryBudgetFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CategoryBudgetPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.CategoryBudgetFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CategoryBudgetPayload>
+        }
+        findFirst: {
+          args: Prisma.CategoryBudgetFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CategoryBudgetPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.CategoryBudgetFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CategoryBudgetPayload>
+        }
+        findMany: {
+          args: Prisma.CategoryBudgetFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CategoryBudgetPayload>[]
+        }
+        create: {
+          args: Prisma.CategoryBudgetCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CategoryBudgetPayload>
+        }
+        createMany: {
+          args: Prisma.CategoryBudgetCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.CategoryBudgetCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CategoryBudgetPayload>[]
+        }
+        delete: {
+          args: Prisma.CategoryBudgetDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CategoryBudgetPayload>
+        }
+        update: {
+          args: Prisma.CategoryBudgetUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CategoryBudgetPayload>
+        }
+        deleteMany: {
+          args: Prisma.CategoryBudgetDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.CategoryBudgetUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.CategoryBudgetUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CategoryBudgetPayload>[]
+        }
+        upsert: {
+          args: Prisma.CategoryBudgetUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CategoryBudgetPayload>
+        }
+        aggregate: {
+          args: Prisma.CategoryBudgetAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateCategoryBudget>
+        }
+        groupBy: {
+          args: Prisma.CategoryBudgetGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CategoryBudgetGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.CategoryBudgetCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CategoryBudgetCountAggregateOutputType> | number
         }
       }
     }
@@ -942,6 +1017,20 @@ export const WishlistItemScalarFieldEnum = {
 } as const
 
 export type WishlistItemScalarFieldEnum = (typeof WishlistItemScalarFieldEnum)[keyof typeof WishlistItemScalarFieldEnum]
+
+
+export const CategoryBudgetScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  category: 'category',
+  month: 'month',
+  year: 'year',
+  limit: 'limit',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type CategoryBudgetScalarFieldEnum = (typeof CategoryBudgetScalarFieldEnum)[keyof typeof CategoryBudgetScalarFieldEnum]
 
 
 export const SessionScalarFieldEnum = {
@@ -1277,6 +1366,7 @@ export type GlobalOmitConfig = {
   user?: Prisma.UserOmit
   transaction?: Prisma.TransactionOmit
   wishlistItem?: Prisma.WishlistItemOmit
+  categoryBudget?: Prisma.CategoryBudgetOmit
   session?: Prisma.SessionOmit
   account?: Prisma.AccountOmit
   verification?: Prisma.VerificationOmit

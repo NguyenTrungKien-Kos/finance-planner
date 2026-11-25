@@ -54,6 +54,7 @@ export const ModelName = {
   User: 'User',
   Transaction: 'Transaction',
   WishlistItem: 'WishlistItem',
+  CategoryBudget: 'CategoryBudget',
   Session: 'Session',
   Account: 'Account',
   Verification: 'Verification'
@@ -112,6 +113,20 @@ export const WishlistItemScalarFieldEnum = {
 } as const
 
 export type WishlistItemScalarFieldEnum = (typeof WishlistItemScalarFieldEnum)[keyof typeof WishlistItemScalarFieldEnum]
+
+
+export const CategoryBudgetScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  category: 'category',
+  month: 'month',
+  year: 'year',
+  limit: 'limit',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type CategoryBudgetScalarFieldEnum = (typeof CategoryBudgetScalarFieldEnum)[keyof typeof CategoryBudgetScalarFieldEnum]
 
 
 export const SessionScalarFieldEnum = {

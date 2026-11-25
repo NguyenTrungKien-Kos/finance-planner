@@ -33,6 +33,11 @@ export type Transaction = Prisma.TransactionModel
  */
 export type WishlistItem = Prisma.WishlistItemModel
 /**
+ * Model CategoryBudget
+ * 
+ */
+export type CategoryBudget = Prisma.CategoryBudgetModel
+/**
  * Model Session
  * 
  */
