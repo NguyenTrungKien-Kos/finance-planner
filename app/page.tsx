@@ -3,10 +3,12 @@ import { connection } from "next/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { fetchExchangeRates } from "@/lib/exchange-rates";
+import { syncRecurringTransactions } from "@/lib/recurring-sync";
 import { BudgetAlertNotifier } from "@/components/budget-alert-notifier";
 import { BudgetSection } from "@/components/budget-section";
 import { CurrencyConverterCard } from "@/components/currency-converter-card";
 import { MonthlyComparisonChart } from "@/components/monthly-comparison-chart";
+import { RecurringSection } from "@/components/recurring-section";
 import { requireUser, UnauthorizedError } from "@/lib/dal";
 import {
   CATEGORIES,
@@ -120,11 +122,14 @@ async function DashboardContent({
   const currentMonth = now.getMonth() + 1;
   const currentYear = now.getFullYear();
 
+  await syncRecurringTransactions(user.id, now);
+
   const [
     transactions,
     allTransactions,
     wishlistItems,
     categoryBudgets,
+    recurringTransactions,
     exchangeRates,
   ] = await Promise.all([
     prisma.transaction.findMany({
@@ -151,6 +156,10 @@ async function DashboardContent({
         year: currentYear,
       },
       orderBy: { category: "asc" },
+    }),
+    prisma.recurringTransaction.findMany({
+      where: { userId: user.id },
+      orderBy: [{ isActive: "desc" }, { dayOfMonth: "asc" }],
     }),
     fetchExchangeRates(),
   ]);
@@ -233,6 +242,8 @@ async function DashboardContent({
         year={currentYear}
         statuses={budgetStatuses}
       />
+
+      <RecurringSection items={recurringTransactions} />
 
       <MonthlyComparisonChart
         data={monthlyComparison}

@@ -32,34 +32,58 @@ enum Priority {
 }
 
 model User {
-  id              String           @id @default(cuid())
-  name            String
-  email           String           @unique
-  emailVerified   Boolean          @default(false)
-  image           String?
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  transactions    Transaction[]
-  wishlistItems   WishlistItem[]
-  categoryBudgets CategoryBudget[]
-  sessions        Session[]
-  accounts        Account[]
+  id                    String                 @id @default(cuid())
+  name                  String
+  email                 String                 @unique
+  emailVerified         Boolean                @default(false)
+  image                 String?
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  transactions          Transaction[]
+  wishlistItems         WishlistItem[]
+  categoryBudgets       CategoryBudget[]
+  recurringTransactions RecurringTransaction[]
+  sessions              Session[]
+  accounts              Account[]
 
   @@map("user")
 }
 
 model Transaction {
-  id          String          @id @default(cuid())
-  userId      String
-  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type        TransactionType
-  amount      Int // VND, số nguyên dương
-  description String
-  category    Category
-  date        DateTime
-  createdAt   DateTime        @default(now())
+  id             String                @id @default(cuid())
+  userId         String
+  user           User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type           TransactionType
+  amount         Int // VND, số nguyên dương
+  description    String
+  category       Category
+  date           DateTime
+  recurringId    String?
+  recurringMonth String? // Định dạng "YYYY-MM", dùng chống sinh trùng theo tháng
+  recurring      RecurringTransaction? @relation(fields: [recurringId], references: [id], onDelete: SetNull)
+  createdAt      DateTime              @default(now())
 
+  @@unique([recurringId, recurringMonth])
   @@index([userId, date])
+}
+
+model RecurringTransaction {
+  id                 String          @id @default(cuid())
+  userId             String
+  user               User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type               TransactionType
+  amount             Int // VND, số nguyên dương
+  description        String
+  category           Category
+  dayOfMonth         Int // 1-31
+  isActive           Boolean         @default(true)
+  lastGeneratedYear  Int?
+  lastGeneratedMonth Int? // 1-12
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+  transactions       Transaction[]
+
+  @@index([userId, isActive])
 }
 
 model WishlistItem {

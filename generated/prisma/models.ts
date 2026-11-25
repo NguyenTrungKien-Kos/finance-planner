@@ -10,6 +10,7 @@
  */
 export type * from './models/User'
 export type * from './models/Transaction'
+export type * from './models/RecurringTransaction'
 export type * from './models/WishlistItem'
 export type * from './models/CategoryBudget'
 export type * from './models/Session'

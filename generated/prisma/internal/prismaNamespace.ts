@@ -399,6 +399,7 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 export const ModelName = {
   User: 'User',
   Transaction: 'Transaction',
+  RecurringTransaction: 'RecurringTransaction',
   WishlistItem: 'WishlistItem',
   CategoryBudget: 'CategoryBudget',
   Session: 'Session',
@@ -419,7 +420,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "transaction" | "wishlistItem" | "categoryBudget" | "session" | "account" | "verification"
+    modelProps: "user" | "transaction" | "recurringTransaction" | "wishlistItem" | "categoryBudget" | "session" | "account" | "verification"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -568,6 +569,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.TransactionCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.TransactionCountAggregateOutputType> | number
+        }
+      }
+    }
+    RecurringTransaction: {
+      payload: Prisma.$RecurringTransactionPayload<ExtArgs>
+      fields: Prisma.RecurringTransactionFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.RecurringTransactionFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecurringTransactionPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.RecurringTransactionFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecurringTransactionPayload>
+        }
+        findFirst: {
+          args: Prisma.RecurringTransactionFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecurringTransactionPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.RecurringTransactionFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecurringTransactionPayload>
+        }
+        findMany: {
+          args: Prisma.RecurringTransactionFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecurringTransactionPayload>[]
+        }
+        create: {
+          args: Prisma.RecurringTransactionCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecurringTransactionPayload>
+        }
+        createMany: {
+          args: Prisma.RecurringTransactionCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.RecurringTransactionCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecurringTransactionPayload>[]
+        }
+        delete: {
+          args: Prisma.RecurringTransactionDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecurringTransactionPayload>
+        }
+        update: {
+          args: Prisma.RecurringTransactionUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecurringTransactionPayload>
+        }
+        deleteMany: {
+          args: Prisma.RecurringTransactionDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.RecurringTransactionUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.RecurringTransactionUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecurringTransactionPayload>[]
+        }
+        upsert: {
+          args: Prisma.RecurringTransactionUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$RecurringTransactionPayload>
+        }
+        aggregate: {
+          args: Prisma.RecurringTransactionAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateRecurringTransaction>
+        }
+        groupBy: {
+          args: Prisma.RecurringTransactionGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.RecurringTransactionGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.RecurringTransactionCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.RecurringTransactionCountAggregateOutputType> | number
         }
       }
     }
@@ -1001,10 +1076,30 @@ export const TransactionScalarFieldEnum = {
   description: 'description',
   category: 'category',
   date: 'date',
+  recurringId: 'recurringId',
+  recurringMonth: 'recurringMonth',
   createdAt: 'createdAt'
 } as const
 
 export type TransactionScalarFieldEnum = (typeof TransactionScalarFieldEnum)[keyof typeof TransactionScalarFieldEnum]
+
+
+export const RecurringTransactionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  type: 'type',
+  amount: 'amount',
+  description: 'description',
+  category: 'category',
+  dayOfMonth: 'dayOfMonth',
+  isActive: 'isActive',
+  lastGeneratedYear: 'lastGeneratedYear',
+  lastGeneratedMonth: 'lastGeneratedMonth',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type RecurringTransactionScalarFieldEnum = (typeof RecurringTransactionScalarFieldEnum)[keyof typeof RecurringTransactionScalarFieldEnum]
 
 
 export const WishlistItemScalarFieldEnum = {
@@ -1366,6 +1461,7 @@ export type PrismaClientOptions = PrismaClientOptionsWithAccelerateUrl | PrismaC
 export type GlobalOmitConfig = {
   user?: Prisma.UserOmit
   transaction?: Prisma.TransactionOmit
+  recurringTransaction?: Prisma.RecurringTransactionOmit
   wishlistItem?: Prisma.WishlistItemOmit
   categoryBudget?: Prisma.CategoryBudgetOmit
   session?: Prisma.SessionOmit
