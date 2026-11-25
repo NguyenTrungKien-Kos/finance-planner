@@ -26,6 +26,7 @@ import {
 import { DeleteTransactionButton } from "@/components/delete-transaction-button";
 import { ExpensePieChart } from "@/components/expense-pie-chart";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { TransactionCsvControls } from "@/components/transaction-csv-controls";
 import { TransactionDialog } from "@/components/transaction-dialog";
 import { TransactionFilters } from "@/components/transaction-filters";
 import { UserNav } from "@/components/user-nav";
@@ -256,10 +257,17 @@ async function DashboardContent({
       />
 
       <Card>
-        <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <CardTitle>
-            Lịch sử giao dịch ({transactions.length} mục)
-          </CardTitle>
+        <CardHeader className="flex flex-col gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <CardTitle>
+              Lịch sử giao dịch ({transactions.length} mục)
+            </CardTitle>
+            <TransactionCsvControls
+              period={period}
+              type={validType ?? "ALL"}
+              category={validCategory ?? "ALL"}
+            />
+          </div>
           <TransactionFilters
             period={period}
             type={validType ?? "ALL"}
