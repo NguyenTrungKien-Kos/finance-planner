@@ -1,3 +1,4 @@
+import { Target } from "lucide-react";
 import { PRIORITIES, PRIORITY_LABELS } from "@/lib/constants";
 import {
   calculateMonthlySavingsSuggestion,
@@ -60,23 +61,31 @@ export function WishlistSection({
       />
 
       <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3">
-        <div>
-          <CardTitle>Wishlist mục tiêu ({items.length} món)</CardTitle>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Tính theo tổng số dư hiện tại: {formatVND(balance)}
-          </p>
+        <div className="flex items-start gap-3">
+          <span
+            aria-hidden="true"
+            className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-emerald-500/12 text-emerald-600 dark:text-emerald-400"
+          >
+            <Target className="size-4" />
+          </span>
+          <div>
+            <CardTitle>Wishlist mục tiêu ({items.length} món)</CardTitle>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Tính theo tổng số dư hiện tại: {formatVND(balance)}
+            </p>
+          </div>
         </div>
         <WishlistDialog mode="create" />
       </CardHeader>
 
       <CardContent>
         {items.length === 0 ? (
-          <p className="py-6 text-center text-sm text-muted-foreground">
+          <p className="rounded-2xl border border-dashed border-border py-8 text-center text-sm text-muted-foreground">
             Chưa có món đồ nào trong Wishlist. Hãy thêm mục tiêu đầu tiên của
             bạn!
           </p>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {items.map((item) => {
               const progress = calculateWishlistProgress(balance, item.cost);
               const remaining = Math.max(0, item.cost - Math.max(0, balance));
@@ -89,11 +98,11 @@ export function WishlistSection({
               return (
                 <div
                   key={item.id}
-                  className="space-y-2 rounded-lg border p-3.5"
+                  className="space-y-2.5 rounded-2xl border border-border/75 bg-card p-4 transition-colors hover:bg-muted/20"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-medium">{item.name}</span>
+                      <span className="font-semibold">{item.name}</span>
                       <Badge variant={PRIORITY_VARIANTS[item.priority]}>
                         {PRIORITY_LABELS[item.priority]}
                       </Badge>
@@ -111,7 +120,7 @@ export function WishlistSection({
                     </div>
 
                     <div className="flex items-center gap-1">
-                      <span className="mr-2 font-mono text-sm font-medium">
+                      <span className="mr-2 font-mono text-sm font-semibold tabular-nums">
                         {formatVND(item.cost)}
                       </span>
                       <WishlistDialog mode="edit" item={item} />
@@ -121,13 +130,23 @@ export function WishlistSection({
 
                   <Progress
                     value={progress}
-                    className="h-2"
+                    className={
+                      progress >= 100
+                        ? "h-2.5 [&>div]:bg-emerald-500"
+                        : "h-2.5"
+                    }
                     aria-label={`Tiến độ tiết kiệm cho ${item.name}: ${progress}%`}
                   />
 
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <span>Đạt {progress}% mục tiêu</span>
-                    <span>
+                    <span
+                      className={
+                        remaining === 0
+                          ? "font-semibold text-emerald-600 dark:text-emerald-400"
+                          : "font-medium"
+                      }
+                    >
                       {remaining === 0
                         ? "Đã đủ tiền mua!"
                         : `Còn thiếu ${formatVND(remaining)}`}
@@ -136,10 +155,10 @@ export function WishlistSection({
 
                   {suggestion && !suggestion.isCompleted && (
                     <p
-                      className={`text-xs ${
+                      className={`rounded-xl px-3 py-2 text-xs font-medium ${
                         suggestion.isOverdue
-                          ? "font-medium text-destructive"
-                          : "text-emerald-700 dark:text-emerald-400"
+                          ? "bg-rose-500/10 text-rose-600 dark:text-rose-400"
+                          : "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
                       }`}
                     >
                       {suggestion.isOverdue

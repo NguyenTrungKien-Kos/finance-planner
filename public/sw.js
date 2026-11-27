@@ -1,4 +1,4 @@
-const CACHE_NAME = "finance-planner-static-v1";
+const CACHE_NAME = "finance-planner-static-v2";
 const STATIC_ASSETS = [
   "/manifest.webmanifest",
   "/icon-192.png",
@@ -33,6 +33,15 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
+
+  // Không cache khi đang chạy dev trên localhost để tránh dính CSS/JS cũ
+  if (
+    url.hostname === "localhost" ||
+    url.hostname === "127.0.0.1" ||
+    url.hostname === "[::1]"
+  ) {
+    return;
+  }
 
   // Tuyệt đối không cache API, Better Auth, trang đăng nhập/đăng ký hoặc HTML động
   if (

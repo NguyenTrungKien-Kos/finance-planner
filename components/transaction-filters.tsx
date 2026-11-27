@@ -49,13 +49,16 @@ export function TransactionFilters({
   return (
     <div
       aria-label="Bộ lọc giao dịch"
-      className="flex flex-wrap items-center gap-3"
+      className="flex flex-wrap items-center gap-2.5"
     >
       <Select
         value={period}
         onValueChange={(val) => updateFilter("period", val)}
       >
-        <SelectTrigger className="w-[155px]" aria-label="Lọc theo thời gian">
+        <SelectTrigger
+          className="h-9 w-[160px] rounded-xl bg-background"
+          aria-label="Lọc theo thời gian"
+        >
           <SelectValue placeholder="Thời gian" />
         </SelectTrigger>
         <SelectContent>
@@ -66,7 +69,10 @@ export function TransactionFilters({
       </Select>
 
       <Select value={type} onValueChange={(val) => updateFilter("type", val)}>
-        <SelectTrigger className="w-[145px]" aria-label="Lọc theo loại">
+        <SelectTrigger
+          className="h-9 w-[145px] rounded-xl bg-background"
+          aria-label="Lọc theo loại"
+        >
           <SelectValue placeholder="Loại giao dịch" />
         </SelectTrigger>
         <SelectContent>
@@ -83,7 +89,10 @@ export function TransactionFilters({
         value={category}
         onValueChange={(val) => updateFilter("category", val)}
       >
-        <SelectTrigger className="w-[160px]" aria-label="Lọc theo danh mục">
+        <SelectTrigger
+          className="h-9 w-[165px] rounded-xl bg-background"
+          aria-label="Lọc theo danh mục"
+        >
           <SelectValue placeholder="Danh mục" />
         </SelectTrigger>
         <SelectContent>

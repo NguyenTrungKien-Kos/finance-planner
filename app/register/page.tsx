@@ -2,7 +2,7 @@ import { AuthForm } from "@/components/auth-form";
 
 export default function RegisterPage() {
   return (
-    <main className="flex min-h-screen items-center justify-center px-4 py-12">
+    <main className="min-h-screen bg-background">
       <AuthForm mode="register" />
     </main>
   );

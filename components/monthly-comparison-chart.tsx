@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
-import { Minus, TrendingDown, TrendingUp } from "lucide-react";
+import { ChartColumn, Minus, TrendingDown, TrendingUp } from "lucide-react";
 import type { MonthlyComparisonItem, SpendingTrend } from "@/lib/finance";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,11 +18,11 @@ import {
 const chartConfig = {
   income: {
     label: "Tổng thu",
-    color: "#16a34a",
+    color: "#5b5ce6",
   },
   expense: {
     label: "Tổng chi",
-    color: "#e11d48",
+    color: "#c2c9fa",
   },
 } satisfies ChartConfig;
 
@@ -46,7 +46,7 @@ function formatCompactVND(value: number): string {
 function TrendSummary({ trend }: { trend: SpendingTrend }) {
   if (trend.previousExpense === 0 && trend.currentExpense === 0) {
     return (
-      <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+      <p className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
         <Minus className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
         <span>Chưa có dữ liệu chi tiêu ở tháng này và tháng trước.</span>
       </p>
@@ -55,7 +55,7 @@ function TrendSummary({ trend }: { trend: SpendingTrend }) {
 
   if (trend.previousExpense === 0 && trend.currentExpense > 0) {
     return (
-      <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+      <p className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
         <TrendingUp
           className="h-3.5 w-3.5 shrink-0 text-rose-600 dark:text-rose-400"
           aria-hidden="true"
@@ -70,7 +70,7 @@ function TrendSummary({ trend }: { trend: SpendingTrend }) {
 
   if (trend.direction === "up") {
     return (
-      <p className="mt-1 flex items-center gap-1.5 text-xs text-rose-600 dark:text-rose-400">
+      <p className="mt-1.5 inline-flex items-center gap-1.5 rounded-full bg-rose-500/10 px-2.5 py-0.5 text-xs font-medium text-rose-600 dark:text-rose-400">
         <TrendingUp className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
         <span>
           Chi tiêu tháng này tăng {formatVND(trend.difference)} (
@@ -83,7 +83,7 @@ function TrendSummary({ trend }: { trend: SpendingTrend }) {
 
   if (trend.direction === "down") {
     return (
-      <p className="mt-1 flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400">
+      <p className="mt-1.5 inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
         <TrendingDown className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
         <span>
           Chi tiêu tháng này giảm {formatVND(Math.abs(trend.difference))} (
@@ -95,7 +95,7 @@ function TrendSummary({ trend }: { trend: SpendingTrend }) {
   }
 
   return (
-    <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+    <p className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
       <Minus className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
       <span>
         Chi tiêu tháng này bằng tháng trước ({formatVND(trend.currentExpense)}).
@@ -115,11 +115,19 @@ export function MonthlyComparisonChart({
   const hasAnyData = data.some((item) => item.income > 0 || item.expense > 0);
 
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3">
-        <div>
-          <CardTitle>So sánh thu chi 6 tháng gần nhất</CardTitle>
-          <TrendSummary trend={trend} />
+        <div className="flex items-start gap-3">
+          <span
+            aria-hidden="true"
+            className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary"
+          >
+            <ChartColumn className="size-4" />
+          </span>
+          <div>
+            <CardTitle>So sánh thu chi 6 tháng gần nhất</CardTitle>
+            <TrendSummary trend={trend} />
+          </div>
         </div>
 
         {hasAnyData && (
@@ -136,9 +144,9 @@ export function MonthlyComparisonChart({
         )}
       </CardHeader>
 
-      <CardContent>
+      <CardContent className="flex flex-1 flex-col justify-center">
         {!hasAnyData ? (
-          <p className="py-8 text-center text-sm text-muted-foreground">
+          <p className="py-10 text-center text-sm text-muted-foreground">
             Chưa có dữ liệu giao dịch trong 6 tháng gần nhất.
           </p>
         ) : (
@@ -149,10 +157,14 @@ export function MonthlyComparisonChart({
             >
               <ChartContainer
                 config={chartConfig}
-                className="aspect-auto h-[280px] w-full"
+                className="aspect-auto h-[270px] w-full"
               >
-                <BarChart data={data} accessibilityLayer>
-                  <CartesianGrid vertical={false} />
+                <BarChart data={data} barGap={6} accessibilityLayer>
+                  <CartesianGrid
+                    vertical={false}
+                    strokeDasharray="4 4"
+                    stroke="var(--border)"
+                  />
                   <XAxis
                     dataKey="label"
                     tickLine={false}
@@ -166,13 +178,14 @@ export function MonthlyComparisonChart({
                     tickFormatter={formatCompactVND}
                   />
                   <ChartTooltip
+                    cursor={{ fill: "var(--muted)", opacity: 0.45 }}
                     content={
                       <ChartTooltipContent
                         formatter={(value, name) => (
                           <div className="flex flex-1 items-center justify-between gap-4">
                             <span className="flex items-center gap-1.5 text-muted-foreground">
                               <span
-                                className="h-2.5 w-2.5 shrink-0 rounded-[2px]"
+                                className="h-2.5 w-2.5 shrink-0 rounded-full"
                                 style={{
                                   backgroundColor:
                                     name === "income"
@@ -182,7 +195,7 @@ export function MonthlyComparisonChart({
                               />
                               {name === "income" ? "Tổng thu" : "Tổng chi"}
                             </span>
-                            <span className="font-mono font-medium text-foreground tabular-nums">
+                            <span className="font-mono font-semibold text-foreground tabular-nums">
                               {formatVND(Number(value))}
                             </span>
                           </div>
@@ -194,12 +207,14 @@ export function MonthlyComparisonChart({
                   <Bar
                     dataKey="income"
                     fill="var(--color-income)"
-                    radius={[4, 4, 0, 0]}
+                    radius={[8, 8, 8, 8]}
+                    maxBarSize={20}
                   />
                   <Bar
                     dataKey="expense"
                     fill="var(--color-expense)"
-                    radius={[4, 4, 0, 0]}
+                    radius={[8, 8, 8, 8]}
+                    maxBarSize={20}
                   />
                 </BarChart>
               </ChartContainer>
@@ -209,7 +224,7 @@ export function MonthlyComparisonChart({
               id="monthly-comparison-table"
               className={
                 showTable
-                  ? "mt-4 w-full border-collapse text-sm"
+                  ? "mt-5 w-full border-collapse text-sm"
                   : "sr-only"
               }
             >
@@ -217,33 +232,36 @@ export function MonthlyComparisonChart({
                 Bảng số liệu so sánh thu chi 6 tháng gần nhất
               </caption>
               <thead>
-                <tr className="border-b text-left text-muted-foreground">
-                  <th scope="col" className="py-2 font-medium">
+                <tr className="border-b text-left text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                  <th scope="col" className="py-2.5 font-medium">
                     Tháng
                   </th>
-                  <th scope="col" className="py-2 text-right font-medium">
+                  <th scope="col" className="py-2.5 text-right font-medium">
                     Tổng thu
                   </th>
-                  <th scope="col" className="py-2 text-right font-medium">
+                  <th scope="col" className="py-2.5 text-right font-medium">
                     Tổng chi
                   </th>
-                  <th scope="col" className="py-2 text-right font-medium">
+                  <th scope="col" className="py-2.5 text-right font-medium">
                     Chênh lệch
                   </th>
                 </tr>
               </thead>
               <tbody>
                 {data.map((row) => (
-                  <tr key={row.monthKey} className="border-b last:border-0">
-                    <td className="py-2 font-medium">{row.label}</td>
-                    <td className="py-2 text-right font-mono text-emerald-600 dark:text-emerald-400">
+                  <tr
+                    key={row.monthKey}
+                    className="border-b border-border/60 last:border-0"
+                  >
+                    <td className="py-2.5 font-medium">{row.label}</td>
+                    <td className="py-2.5 text-right font-mono text-emerald-600 tabular-nums dark:text-emerald-400">
                       {formatVND(row.income)}
                     </td>
-                    <td className="py-2 text-right font-mono text-rose-600 dark:text-rose-400">
+                    <td className="py-2.5 text-right font-mono text-rose-600 tabular-nums dark:text-rose-400">
                       {formatVND(row.expense)}
                     </td>
                     <td
-                      className={`py-2 text-right font-mono ${
+                      className={`py-2.5 text-right font-mono tabular-nums ${
                         row.balance >= 0
                           ? "text-emerald-600 dark:text-emerald-400"
                           : "text-rose-600 dark:text-rose-400"
